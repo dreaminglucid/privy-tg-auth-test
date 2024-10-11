@@ -34,3 +34,22 @@ In your project directory, run `npm run start`. You can now visit http://localho
 - `config-overrides.js` for how to [handle common issues with Webpack 5](https://docs.privy.io/guide/troubleshooting/webpack)
 
 **Check out [our docs](https://docs.privy.io/) for more guidance around using Privy in your app!**
+
+## How to expose and set domain for telegram bot:
+
+- `/setdomain` with botfather bot on telegram
+- `npm install -g localtunnel`
+- `npx localtunnel --port 3000`
+- or `ngrok http 3000`
+
+
+## TODO:
+
+- expose over https using ngrok or npm localtunnel 
+- need privy account with telegram login activated (must rewuest access)
+
+### Privy limitations and considerations:
+- Privy is free up to 150 users. We will need a premium account to support more users.
+- Privy is a fairly centralized solution, with a dashboard for managing users. We will need to consider how we handle data redundancy and how we handle data privacy.
+- Privy has a smartwallet feature that uses embedded wallets. We will be able to use it in conjuntion with Redstone network. We need to consider how these features could be used in our application.
+- When logging into telegram from outside of the telegram app, the user will be redirected to a browser window which asks them for their phone number. This is not ideal for our application. We will need to consider how we handle this.
