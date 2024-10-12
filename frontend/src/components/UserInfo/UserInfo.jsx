@@ -1,4 +1,4 @@
-// src/components/UserInfo.js
+// frontend/src/components/UserInfo/UserInfo.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 

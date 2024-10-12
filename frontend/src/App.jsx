@@ -1,10 +1,10 @@
-// src/App.jsx
+// frontend/src/App.jsx
 import React from 'react';
 import { PrivyProvider } from "@privy-io/react-auth";
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import Parent from './Parent';
-import './index.css'; // Ensure Tailwind is imported here
+import './index.css'; // Tailwind styles
 
 const queryClient = new QueryClient();
 
@@ -20,6 +20,7 @@ function App() {
             "coinbase",
             "walletconnect",
             "telegram",
+            "email",
           ],
         }}
       >

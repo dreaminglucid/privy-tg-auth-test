@@ -1,11 +1,12 @@
-// src/components/LinkButtons.js
+// frontend/src/components/LinkButtons/LinkButtons.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const LinkButtons = ({ user, linkTelegram, linkWallet }) => {
+const LinkButtons = ({ user, linkTelegram, linkWallet, linkEmail }) => {
   const accountTypes = [
     { type: "telegram", displayName: "Telegram", linkMethod: linkTelegram },
     { type: "wallet", displayName: "Wallet", linkMethod: linkWallet },
+    { type: "email", displayName: "Email", linkMethod: linkEmail }, // Added Email
   ];
 
   return (
@@ -16,12 +17,21 @@ const LinkButtons = ({ user, linkTelegram, linkWallet }) => {
           const isLinked =
             accountType.type === "wallet"
               ? user?.linkedAccounts?.some((acc) => acc.type === "wallet") || user?.embeddedWallets?.length > 0
+              : accountType.type === "email"
+              ? !!user?.email?.address
               : user?.linkedAccounts?.some((acc) => acc.type === accountType.type);
+          
           const buttonClasses = `
             py-3 px-5 text-white rounded-md font-medium
-            ${accountType.type === "telegram" || accountType.type === "login" ? 'bg-teal-600 hover:bg-teal-700' : ''}
-            ${accountType.type === "link" ? 'bg-yellow-500 hover:bg-yellow-600' : ''}
-            ${accountType.type === "unlink" ? 'bg-red-600 hover:bg-red-700' : ''}
+            ${
+              accountType.type === "telegram"
+                ? 'bg-teal-600 hover:bg-teal-700'
+                : accountType.type === "wallet"
+                ? 'bg-yellow-500 hover:bg-yellow-600'
+                : accountType.type === "email"
+                ? 'bg-green-600 hover:bg-green-700'
+                : ''
+            }
           `;
           return (
             <button
@@ -44,6 +54,7 @@ LinkButtons.propTypes = {
   user: PropTypes.object.isRequired,
   linkTelegram: PropTypes.func.isRequired,
   linkWallet: PropTypes.func.isRequired,
+  linkEmail: PropTypes.func.isRequired, // Add linkEmail prop
 };
 
 export default LinkButtons;

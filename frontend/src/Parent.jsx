@@ -1,10 +1,10 @@
-// src/Parent.jsx
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useAuth } from './contexts/AuthContext';
 import useEnsNames from './hooks/useEnsNames';
-import UserInfo from './components/UserInfo';
-import LinkButtons from './components/LinkButtons';
-import AccountList from './components/AccountList';
+import UserInfo from './components/UserInfo/UserInfo';
+import LinkButtons from './components/LinkButtons/LinkButtons';
+import AccountList from './components/AccountList/AccountList';
+import FundWallet from './components/FundWallet/FundWallet';
 
 function Parent() {
   const {
@@ -14,11 +14,16 @@ function Parent() {
     login,
     logout,
     linkTelegram,
-    unlinkTelegram,
     linkWallet,
+    unlinkTelegram,
     unlinkWallet,
+    linkEmail,
+    unlinkEmail,
     isInTelegram,
   } = useAuth();
+
+  const [unlinkingAccount, setUnlinkingAccount] = useState(null);
+  const [feedbackMessage, setFeedbackMessage] = useState(null);
 
   const linkedAccounts = useMemo(() => user?.linkedAccounts || [], [user]);
   const embeddedWallets = useMemo(() => user?.embeddedWallets || [], [user]);
@@ -29,7 +34,22 @@ function Parent() {
       .concat(embeddedWallets);
   }, [linkedAccounts, embeddedWallets]);
 
-  const totalLinkedAccounts = linkedAccounts.length + embeddedWallets.length;
+  const totalLinkedAccounts = useMemo(() => {
+    const linkedAccountTypes = new Set(linkedAccounts.map(acc => acc.type));
+    const hasEmail = !!user?.email?.address;
+    
+    let count = linkedAccountTypes.size;
+    
+    if (embeddedWallets.length > 0 && !linkedAccountTypes.has('wallet')) {
+      count++;
+    }
+    
+    if (hasEmail && !linkedAccountTypes.has('email')) {
+      count++;
+    }
+    
+    return count;
+  }, [linkedAccounts, embeddedWallets, user]);
 
   const canUnlinkAccount = () => totalLinkedAccounts > 1;
 
@@ -45,20 +65,35 @@ function Parent() {
 
   const handleUnlink = async (accountType, identifier) => {
     if (!canUnlinkAccount()) {
-      alert("Cannot unlink the last remaining account.");
+      setFeedbackMessage({ type: 'error', text: "Cannot unlink the last remaining account." });
+      setTimeout(() => setFeedbackMessage(null), 5000);
       return;
     }
 
+    setUnlinkingAccount(identifier);
+    setFeedbackMessage(null);
+
     try {
+      let result;
       if (accountType.type === "telegram") {
-        await unlinkTelegram(identifier);
+        result = await unlinkTelegram(identifier);
       } else if (accountType.type === "wallet") {
-        await unlinkWallet(identifier);
+        result = await unlinkWallet(identifier);
+      } else if (accountType.type === "email") {
+        result = await unlinkEmail(identifier);
       }
-      alert(`${accountType.displayName} unlinked successfully.`);
+      
+      if (result) {
+        setFeedbackMessage({ type: 'success', text: `${accountType.displayName} unlinked successfully.` });
+      } else {
+        throw new Error("Unlinking failed");
+      }
     } catch (error) {
       console.error(`Error unlinking ${accountType.displayName}:`, error);
-      alert(`Failed to unlink ${accountType.displayName}. Please try again.`);
+      setFeedbackMessage({ type: 'error', text: `Failed to unlink ${accountType.displayName}. Please try again.` });
+    } finally {
+      setUnlinkingAccount(null);
+      setTimeout(() => setFeedbackMessage(null), 5000);
     }
   };
 
@@ -89,7 +124,14 @@ function Parent() {
             user={user}
             linkTelegram={linkTelegram}
             linkWallet={linkWallet}
+            linkEmail={linkEmail}
           />
+          <FundWallet />
+          {feedbackMessage && (
+            <div className={`mt-4 p-3 rounded-md ${feedbackMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {feedbackMessage.text}
+            </div>
+          )}
           <div className="mt-8">
             <h3 className="text-2xl font-semibold mb-4">Linked Accounts</h3>
             {isLoadingEns ? (
@@ -100,6 +142,7 @@ function Parent() {
                 handleUnlink={handleUnlink}
                 canUnlinkAccount={canUnlinkAccount()}
                 ensNames={ensNames || {}}
+                unlinkingAccount={unlinkingAccount}
               />
             )}
           </div>

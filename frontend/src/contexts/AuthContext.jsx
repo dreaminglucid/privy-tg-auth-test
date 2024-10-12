@@ -1,16 +1,16 @@
-// src/contexts/AuthContext.js
+// frontend/src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useEffect } from 'react';
 import { usePrivy } from "@privy-io/react-auth";
 import useStore from '../store/useStore';
 import PropTypes from 'prop-types';
 
-// Create the AuthContext
+// Create AuthContext
 const AuthContext = createContext();
 
-// Custom hook to consume AuthContext easily
+// Custom hook to use AuthContext
 export const useAuth = () => useContext(AuthContext);
 
-// AuthProvider component that wraps around parts of the app that need access to auth
+// AuthProvider component
 export const AuthProvider = ({ children }) => {
   const {
     ready,
@@ -19,9 +19,12 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     linkTelegram,
-    unlinkTelegram,
+    unlinkTelegram,   // Ensure this is destructured
     linkWallet,
-    unlinkWallet,
+    unlinkWallet,     // Ensure this is destructured
+    linkEmail,        // Add linkEmail if available
+    unlinkEmail,      // Add unlinkEmail if available
+    getAccessToken,
   } = usePrivy();
 
   const { isInTelegram, setIsInTelegram } = useStore();
@@ -44,10 +47,13 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     linkTelegram,
-    unlinkTelegram,
+    unlinkTelegram,   // Provide unlinkTelegram in context
     linkWallet,
-    unlinkWallet,
+    unlinkWallet,     // Provide unlinkWallet in context
+    linkEmail,        // Provide linkEmail in context
+    unlinkEmail,      // Provide unlinkEmail in context
     isInTelegram,
+    getAccessToken,
   };
 
   return (
@@ -60,3 +66,5 @@ export const AuthProvider = ({ children }) => {
 AuthProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };
+
+export default AuthContext;
