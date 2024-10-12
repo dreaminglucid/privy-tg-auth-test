@@ -20,8 +20,6 @@ function App() {
             "coinbase",
             "walletconnect",
             "telegram",
-            "email",
-            "google",
           ],
         }}
       >
