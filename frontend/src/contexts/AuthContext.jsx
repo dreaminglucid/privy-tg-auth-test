@@ -1,6 +1,7 @@
 // frontend/src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useEffect } from 'react';
 import { usePrivy } from "@privy-io/react-auth";
+import { useSetActiveWallet } from '@privy-io/wagmi'; // Import hook to set active wallet
 import useStore from '../store/useStore';
 import PropTypes from 'prop-types';
 
@@ -19,15 +20,17 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     linkTelegram,
-    unlinkTelegram,   // Ensure this is destructured
+    unlinkTelegram,
     linkWallet,
-    unlinkWallet,     // Ensure this is destructured
-    linkEmail,        // Add linkEmail if available
-    unlinkEmail,      // Add unlinkEmail if available
+    unlinkWallet,
+    linkEmail,
+    unlinkEmail,
     getAccessToken,
+    wallets,
   } = usePrivy();
 
   const { isInTelegram, setIsInTelegram } = useStore();
+  const { setActiveWallet } = useSetActiveWallet(); // Get setActiveWallet function
 
   useEffect(() => {
     const checkTelegramWebApp = () => {
@@ -40,6 +43,14 @@ export const AuthProvider = ({ children }) => {
     checkTelegramWebApp();
   }, [login, setIsInTelegram]);
 
+  // Set the active wallet whenever the wallets change
+  useEffect(() => {
+    if (wallets && wallets.length > 0) {
+      // You can set logic to choose which wallet to set as active
+      setActiveWallet(wallets[0]);
+    }
+  }, [wallets, setActiveWallet]);
+
   const value = {
     ready,
     authenticated,
@@ -47,13 +58,14 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     linkTelegram,
-    unlinkTelegram,   // Provide unlinkTelegram in context
+    unlinkTelegram,
     linkWallet,
-    unlinkWallet,     // Provide unlinkWallet in context
-    linkEmail,        // Provide linkEmail in context
-    unlinkEmail,      // Provide unlinkEmail in context
+    unlinkWallet,
+    linkEmail,
+    unlinkEmail,
     isInTelegram,
     getAccessToken,
+    wallets,
   };
 
   return (

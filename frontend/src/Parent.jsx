@@ -1,10 +1,12 @@
-import React, { useMemo, useState } from "react";
+// src/Parent.jsx
+import React, { useMemo, useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import useEnsNames from './hooks/useEnsNames';
 import UserInfo from './components/UserInfo/UserInfo';
 import LinkButtons from './components/LinkButtons/LinkButtons';
 import AccountList from './components/AccountList/AccountList';
 import FundWallet from './components/FundWallet/FundWallet';
+import { useAccount, useSignMessage } from 'wagmi'; // Import wagmi hooks
 
 function Parent() {
   const {
@@ -30,31 +32,31 @@ function Parent() {
 
   const allWallets = useMemo(() => {
     return linkedAccounts
-      .filter(acc => acc.type === "wallet")
+      .filter((acc) => acc.type === 'wallet')
       .concat(embeddedWallets);
   }, [linkedAccounts, embeddedWallets]);
 
   const totalLinkedAccounts = useMemo(() => {
-    const linkedAccountTypes = new Set(linkedAccounts.map(acc => acc.type));
+    const linkedAccountTypes = new Set(linkedAccounts.map((acc) => acc.type));
     const hasEmail = !!user?.email?.address;
-    
+
     let count = linkedAccountTypes.size;
-    
+
     if (embeddedWallets.length > 0 && !linkedAccountTypes.has('wallet')) {
       count++;
     }
-    
+
     if (hasEmail && !linkedAccountTypes.has('email')) {
       count++;
     }
-    
+
     return count;
   }, [linkedAccounts, embeddedWallets, user]);
 
   const canUnlinkAccount = () => totalLinkedAccounts > 1;
 
   const walletAddresses = useMemo(
-    () => allWallets.map(wallet => wallet.address),
+    () => allWallets.map((wallet) => wallet.address),
     [allWallets]
   );
 
@@ -63,9 +65,29 @@ function Parent() {
     authenticated
   );
 
+  const { isConnected } = useAccount(); // Removed 'address' since it's unused
+  const { signMessageAsync } = useSignMessage(); // Get signMessage function
+
+  const signMessage = async () => {
+    if (!isConnected) {
+      console.error('No wallet connected');
+      setFeedbackMessage({ type: 'error', text: 'No wallet connected.' });
+      return;
+    }
+    try {
+      const message = 'Hello, this is a test message!';
+      const signature = await signMessageAsync({ message });
+      console.log('Signature:', signature);
+      setFeedbackMessage({ type: 'success', text: 'Message signed successfully!' });
+    } catch (error) {
+      console.error('Error signing message:', error);
+      setFeedbackMessage({ type: 'error', text: 'Failed to sign message.' });
+    }
+  };
+
   const handleUnlink = async (accountType, identifier) => {
     if (!canUnlinkAccount()) {
-      setFeedbackMessage({ type: 'error', text: "Cannot unlink the last remaining account." });
+      setFeedbackMessage({ type: 'error', text: 'Cannot unlink the last remaining account.' });
       setTimeout(() => setFeedbackMessage(null), 5000);
       return;
     }
@@ -75,22 +97,28 @@ function Parent() {
 
     try {
       let result;
-      if (accountType.type === "telegram") {
+      if (accountType.type === 'telegram') {
         result = await unlinkTelegram(identifier);
-      } else if (accountType.type === "wallet") {
+      } else if (accountType.type === 'wallet') {
         result = await unlinkWallet(identifier);
-      } else if (accountType.type === "email") {
+      } else if (accountType.type === 'email') {
         result = await unlinkEmail(identifier);
       }
-      
+
       if (result) {
-        setFeedbackMessage({ type: 'success', text: `${accountType.displayName} unlinked successfully.` });
+        setFeedbackMessage({
+          type: 'success',
+          text: `${accountType.displayName} unlinked successfully.`,
+        });
       } else {
-        throw new Error("Unlinking failed");
+        throw new Error('Unlinking failed');
       }
     } catch (error) {
       console.error(`Error unlinking ${accountType.displayName}:`, error);
-      setFeedbackMessage({ type: 'error', text: `Failed to unlink ${accountType.displayName}. Please try again.` });
+      setFeedbackMessage({
+        type: 'error',
+        text: `Failed to unlink ${accountType.displayName}. Please try again.`,
+      });
     } finally {
       setUnlinkingAccount(null);
       setTimeout(() => setFeedbackMessage(null), 5000);
@@ -126,9 +154,23 @@ function Parent() {
             linkWallet={linkWallet}
             linkEmail={linkEmail}
           />
+          {/* Add the Sign Message button */}
+          <button
+            onClick={signMessage}
+            className="w-full py-3 bg-blue-600 text-white rounded-md mb-5 hover:bg-blue-700 transition-colors"
+            aria-label="Sign Message"
+          >
+            Sign Test Message
+          </button>
           <FundWallet />
           {feedbackMessage && (
-            <div className={`mt-4 p-3 rounded-md ${feedbackMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            <div
+              className={`mt-4 p-3 rounded-md ${
+                feedbackMessage.type === 'success'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-red-100 text-red-700'
+              }`}
+            >
               {feedbackMessage.text}
             </div>
           )}
